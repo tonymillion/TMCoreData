@@ -44,6 +44,23 @@
                       includeRelationships:includeRelationships];
 }
 
+-(id)exportRelationshipWithName:(NSString*)name
+{
+    NSString *selectorString = [NSString stringWithFormat:@"export%@", [name capitalizedFirstLetterString]];
+    SEL selector = NSSelectorFromString(selectorString);
+    if ([self respondsToSelector:selector])
+    {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+        
+        id exported = [self performSelector:selector];
+#pragma clang diagnostic pop
+        
+        return exported;
+    }
+    
+    return nil;
+}
 
 -(NSDictionary*)exportToDictionaryWithSet:(NSMutableSet*)objectSet includeRelationships:(BOOL)includeRelationships
 {
@@ -53,7 +70,7 @@
     }
     else
     {
-        if ([objectSet containsObject:self]) {
+        if([objectSet containsObject:self]) {
             return nil;
         }
     }
@@ -74,36 +91,54 @@
         
         for(NSString* relationship in relationships)
         {
-            NSRelationshipDescription* description = [relationships objectForKey:relationship];
             __strong id finalvalue = nil;
             
-            if(description.isToMany)
+            // first we check to see if the class has an exportRelationship method
+            finalvalue = [self exportRelationshipWithName:relationship];
+            
+            // if not
+            if(!finalvalue)
             {
-                // this should output an NSArray
-                TMCDLog(@"found to many for: %@", relationship);
+                NSRelationshipDescription* description = [relationships objectForKey:relationship];
+
+                // check userinfo to see if we should export this relationship
+                NSString * shouldExport = [description userInfo][@"shouldExport"];
                 
-                NSSet * allObjects = [self valueForKey:relationship];
-                NSMutableArray * exportedObjects = [NSMutableArray arrayWithCapacity:allObjects.count];
+                // if we get a shouldExport and its NOT 1-9 Y,y,T,t (more digits are ignored)
+                if(shouldExport && (![shouldExport boolValue]))
+                    continue;
                 
-                [allObjects enumerateObjectsUsingBlock:^(id obj, BOOL *stop) {
-                    NSManagedObject * manobj = obj;
+                //TODO: check if this relationship links back to our type of object and if so, skip it!
+                
+                
+                if(description.isToMany)
+                {
+                    // this should output an NSArray
+                    TMCDLog(@"found to many for: %@", relationship);
                     
-                    id subobj = [manobj exportToDictionaryWithSet:objectSet includeRelationships:includeRelationships];
-                    if(subobj)
-                        [exportedObjects addObject:subobj];
-                }];
-                
-                finalvalue = exportedObjects;
-            }
-            else
-            {
-                // its 1:1
-                TMCDLog(@"1:1 relationship found!");
-                NSEntityDescription* destination = [description destinationEntity];
-                Class class = NSClassFromString([destination managedObjectClassName]);
-                
-                finalvalue = [class exportToDictionaryWithSet:objectSet includeRelationships:includeRelationships];
-                
+                    NSSet * allObjects = [self valueForKey:relationship];
+                    NSMutableArray * exportedObjects = [NSMutableArray arrayWithCapacity:allObjects.count];
+                    
+                    [allObjects enumerateObjectsUsingBlock:^(id obj, BOOL *stop) {
+                        NSManagedObject * manobj = obj;
+                        
+                        id subobj = [manobj exportToDictionaryWithSet:objectSet includeRelationships:includeRelationships];
+                        if(subobj)
+                            [exportedObjects addObject:subobj];
+                    }];
+                    
+                    finalvalue = exportedObjects;
+                }
+                else
+                {
+                    // its 1:1
+                    TMCDLog(@"1:1 relationship found!");
+                    NSEntityDescription* destination = [description destinationEntity];
+                    Class class = NSClassFromString([destination managedObjectClassName]);
+                    
+                    finalvalue = [class exportToDictionaryWithSet:objectSet includeRelationships:includeRelationships];
+                    
+                }
             }
             
             [mutableDict setObject:finalvalue
