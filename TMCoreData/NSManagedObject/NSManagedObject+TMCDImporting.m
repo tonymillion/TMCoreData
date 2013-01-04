@@ -160,11 +160,9 @@
         if([self importValue:value
                       forKey:relationship])
         {
-            TMCDLog(@"RELATIONSHIP HANDLED USING CUSTOM IMPORTER");
         }
         else
         {
-            TMCDLog(@"RELATIONSHIP HANDLED USING DEFAULT IMPORTER");
             NSEntityDescription* destination = [description destinationEntity];
             Class class = NSClassFromString([destination managedObjectClassName]);
             
