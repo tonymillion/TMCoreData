@@ -82,7 +82,7 @@
         id value = [dict valueForKey:dictKeyPath];
         if(!value)
         {
-            TMCDLog(@"dict does not contain key %@", dictKeyPath);
+            //TMCDLog(@"dict does not contain key %@", dictKeyPath);
             continue;
         }
         
@@ -94,8 +94,6 @@
         }
         else
         {
-            TMCDLog(@"NOT HANDLED - USING DEFAULT IMPORT");
-            
             NSAttributeType attributeType = [desc attributeType];
             
             if ((attributeType == NSStringAttributeType) && ([value isKindOfClass:[NSNumber class]]))
@@ -115,7 +113,6 @@
             }
             else if ((attributeType == NSDateAttributeType) && ([value isKindOfClass:[NSString class]]) )
             {
-                TMCDLog(@"attributeType == NSDateAttributeType for attr: %@", entityKey);
                 NSDateFormatter * df = [self defaultDateFormatter];
                 
                 NSDate * tempDate = [df dateFromString:value];

@@ -15,17 +15,22 @@
 
 - (BOOL)save
 {
-	if (![self hasChanges])
-        return YES;
+    __block BOOL result = YES;
     
-	NSError* error = nil;
+    [self performBlockAndWait:^{
+        NSError* error = nil;
+        
+        if (![self hasChanges])
+            return;
+        
+        if (![self save:&error])
+        {
+            TMCDLog(@"save ERROR: %@", error);
+            result = NO;
+        }
+    }];
     
-	if (![self save:&error])
-    {
-		return NO;
-	}
-    
-	return YES;
+    return result;
 }
 
 -(void)recursiveSave
