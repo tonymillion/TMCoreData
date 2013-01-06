@@ -155,8 +155,7 @@
         id value = [dict objectForKey:relationship];
         if(!value)
             continue;
-        
-        
+                
         if([self importValue:value
                       forKey:relationship])
         {
@@ -184,16 +183,18 @@
 {
     id exisingObject = nil;
     
-    if([self respondsToSelector:@selector(findExistingWithDictionary:)])
+    if([self respondsToSelector:@selector(findExistingWithDictionary:inContext:)])
     {
-        SEL findExistingSEL = @selector(findExistingWithDictionary:);
+        SEL findExistingSEL = @selector(findExistingWithDictionary:inContext:);
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Warc-performSelector-leaks"
         exisingObject = [[self class] performSelector:findExistingSEL
-                                           withObject:dict];
+                                           withObject:dict
+                                           withObject:context];
+        
 #pragma clang diagnostic pop
     }
-    
+
     // ok lets check the "primaryKey" KVP on the entity user info
     if(!exisingObject)
     {
@@ -249,6 +250,33 @@
 
 +(id)objectWithObject:(id)arrayOrDictionary inContext:(NSManagedObjectContext*)context
 {
+    if([arrayOrDictionary isKindOfClass:[NSString class]] || [arrayOrDictionary isKindOfClass:[NSNumber class]])
+    {
+        // this is probably a single primary key
+        // this probably needs an entity type eh ?
+        
+        id stringOrNumber = arrayOrDictionary;
+        
+        NSString *primaryKeyName = [[self entityDescriptionInContext:context] primaryKey];
+        
+        if(primaryKeyName)
+        {
+            if(stringOrNumber)
+            {
+                NSManagedObject *managedObject = [self findFirstWhereProperty:primaryKeyName
+                                                                    isEqualTo:stringOrNumber
+                                                                    inContext:context];
+                
+                if(managedObject)
+                {
+                    TMCDLog(@"Existing Object Found by primaryKey");
+                    return managedObject;
+                }
+            }
+        }
+        return nil;
+    }
+    
     if([arrayOrDictionary isKindOfClass:[NSDictionary class]])
     {
         return [self importFromDictionary:arrayOrDictionary

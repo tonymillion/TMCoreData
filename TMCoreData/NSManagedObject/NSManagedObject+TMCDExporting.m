@@ -132,17 +132,25 @@
                 else
                 {
                     // its 1:1
-                    TMCDLog(@"1:1 relationship found!");
+                    TMCDLog(@"1:1 relationship found!: %@", description);
                     NSEntityDescription* destination = [description destinationEntity];
-                    Class class = NSClassFromString([destination managedObjectClassName]);
+                    DLog(@"destination: %@", destination);
                     
-                    finalvalue = [class exportToDictionaryWithSet:objectSet includeRelationships:includeRelationships];
+    //                Class class = NSClassFromString([destination managedObjectClassName]);
+                    
+                    id relatedObject = [self valueForKey:relationship];
+                    
+                    finalvalue = [relatedObject exportToDictionaryWithSet:objectSet
+                                                     includeRelationships:includeRelationships];
                     
                 }
             }
             
-            [mutableDict setObject:finalvalue
-                            forKey:relationship];
+            if(finalvalue)
+            {
+                [mutableDict setObject:finalvalue
+                                forKey:relationship];
+            }
         }
     }
     
