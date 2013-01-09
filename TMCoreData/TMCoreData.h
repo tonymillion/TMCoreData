@@ -27,7 +27,7 @@
 -(id)initWithLocalStoreNamed:(NSString*)name;
 -(id)initWithLocalStoreNamed:(NSString*)localStore objectModel:(NSManagedObjectModel*)objectModel;
 
--(id)initWithiCloudContainer:(NSString *)icloudBucket localStoreNamed:(NSString *)localStore;
+-(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID localStoreNamed:(NSString *)localStore objectModel:(NSManagedObjectModel*)objectModel;
 
 -(NSManagedObjectContext*)scratchContext;
 

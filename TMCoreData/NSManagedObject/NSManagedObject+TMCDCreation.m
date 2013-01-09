@@ -19,9 +19,22 @@
 
 +(NSEntityDescription *)entityDescriptionInContext:(NSManagedObjectContext *)context
 {
+    if(!context)
+        return nil;
+    
     NSString *entityName = [self entityName];
-    return [NSEntityDescription entityForName:entityName
-                       inManagedObjectContext:context];
+    
+    NSEntityDescription * entDesc = nil;
+    
+    @try {
+        entDesc =  [NSEntityDescription entityForName:entityName
+                                                     inManagedObjectContext:context];
+    }
+    @catch (NSException *exception) {
+        TMCDLog(@"A Coredata exception happened - this is not good and probably iClouds fault :(");
+    }
+    
+    return entDesc;
 }
 
 +(id)createInContext:(NSManagedObjectContext *)context

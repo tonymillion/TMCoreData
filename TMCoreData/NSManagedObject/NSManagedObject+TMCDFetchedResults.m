@@ -27,6 +27,9 @@
                                                ascending:ascending
                                                inContext:context];
     
+    if(!request)
+        return nil;
+    
     NSFetchedResultsController *controller = [[NSFetchedResultsController alloc] initWithFetchRequest:request
                                                                                  managedObjectContext:context
                                                                                    sectionNameKeyPath:groupingKeyPath

@@ -16,7 +16,12 @@
 +(NSFetchRequest *)createFetchRequestInContext:(NSManagedObjectContext *)context
 {
 	NSFetchRequest *request = [[NSFetchRequest alloc] init];
-	[request setEntity:[self entityDescriptionInContext:context]];
+    
+    NSEntityDescription * ent = [self entityDescriptionInContext:context];
+    if(!ent)
+        return nil;
+    
+	[request setEntity:ent];
     
     return request;
 }
@@ -43,6 +48,9 @@
 
 +(id)executeFetchRequestAndReturnFirstObject:(NSFetchRequest *)request inContext:(NSManagedObjectContext *)context
 {
+    if(!request)
+        return nil;
+    
     // limit this request to 1 result!
 	[request setFetchLimit:1];
     [request setFetchBatchSize:1];
