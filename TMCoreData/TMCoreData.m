@@ -18,6 +18,9 @@
 #define IOS_VERSION_LESS_THAN_OR_EQUAL_TO(v)     ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] != NSOrderedDescending)
 
 
+NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIsAvailableNotification";
+
+
 @interface TMCoreData ()
 
 @property(copy) NSString    *dataStoreName;
@@ -26,6 +29,7 @@
 
 @end
 
+//TODO: make a variable to see wether iCloud is actually online or if we're using a local version because user doesn't have iCloud
 
 @implementation TMCoreData
 
@@ -94,7 +98,7 @@
     return self;
 }
 
--(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID localStoreNamed:(NSString *)localStore objectModel:(NSManagedObjectModel*)objectModel
+-(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID localStoreNamed:(NSString *)localStore objectModel:(NSManagedObjectModel*)objectModel icloudActiveBlock:(void(^)(void))iCloudActiveBlock
 {
     self = [super init];
     if(self)
@@ -145,6 +149,19 @@
                 }
                 
                 [_persistentStoreCoordinator unlock];
+                
+                if(iCloudActiveBlock)
+                {
+                    // we call this SYNCHRONOUSLY on the main queue, before dispatching the notification
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        iCloudActiveBlock();
+                    });
+                }
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kTMCoreDataiCloudIsAvailableNotification
+                                                                        object:self];
+                });
             }
             else
             {
@@ -171,6 +188,19 @@
                                                                   error:nil];
                 
                 [_persistentStoreCoordinator unlock];
+                
+                if(iCloudActiveBlock)
+                {
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        iCloudActiveBlock();
+                    });
+                }
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [[NSNotificationCenter defaultCenter] postNotificationName:kTMCoreDataiCloudIsAvailableNotification
+                                                                        object:self];
+                });
+
             }
             
             

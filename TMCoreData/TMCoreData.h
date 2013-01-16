@@ -19,6 +19,9 @@
 #import "NSManagedObject+TMCDExporting.h"
 #import "NSManagedObject+TMCDImporting.h"
 
+extern NSString *const kTMCoreDataiCloudIsAvailableNotification;
+
+
 @interface TMCoreData : NSObject
 
 @property(readonly, nonatomic) NSManagedObjectContext       *primaryContext;
@@ -27,7 +30,7 @@
 -(id)initWithLocalStoreNamed:(NSString*)name;
 -(id)initWithLocalStoreNamed:(NSString*)localStore objectModel:(NSManagedObjectModel*)objectModel;
 
--(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID localStoreNamed:(NSString *)localStore objectModel:(NSManagedObjectModel*)objectModel;
+-(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID localStoreNamed:(NSString *)localStore objectModel:(NSManagedObjectModel*)objectModel icloudActiveBlock:(void(^)(void))iCloudActiveBlock;
 
 -(NSManagedObjectContext*)scratchContext;
 
