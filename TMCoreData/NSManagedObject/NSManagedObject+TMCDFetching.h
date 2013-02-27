@@ -10,7 +10,6 @@
 
 @interface NSManagedObject (TMCDFetching)
 
-
 +(NSFetchRequest *)createFetchRequestInContext:(NSManagedObjectContext *)context;
 
 

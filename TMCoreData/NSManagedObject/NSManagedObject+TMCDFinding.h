@@ -10,6 +10,9 @@
 
 @interface NSManagedObject (TMCDFinding)
 
++(NSUInteger)countInContext:(NSManagedObjectContext *)context;
++(NSUInteger)countWithPredicate:(NSPredicate *)searchTerm inContext:(NSManagedObjectContext *)context;
+
 +(NSArray *)findAllInContext:(NSManagedObjectContext *)context;
 
 +(NSArray *)findAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context;

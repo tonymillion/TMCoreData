@@ -12,6 +12,30 @@
 
 @implementation NSManagedObject (TMCDFinding)
 
++(NSUInteger)countInContext:(NSManagedObjectContext *)context
+{
+    NSFetchRequest * freq = [self createFetchRequestInContext:context];
+    
+    NSError * err;
+    
+    NSUInteger count = [context countForFetchRequest:freq
+                                               error:&err];
+    
+    return count;
+}
+
++(NSUInteger)countWithPredicate:(NSPredicate *)searchTerm inContext:(NSManagedObjectContext *)context
+{
+    NSFetchRequest *request = [self requestAllWithPredicate:searchTerm inContext:context];
+    NSError * err;
+    
+    NSUInteger count = [context countForFetchRequest:request
+                                               error:&err];
+    
+    return count;
+
+}
+
 
 +(NSArray *)findAllInContext:(NSManagedObjectContext *)context
 {
