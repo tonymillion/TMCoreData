@@ -45,7 +45,8 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 -(id)initWithLocalStoreNamed:(NSString*)localStore
 {
-    return [self initWithLocalStoreNamed:localStore objectModel:nil];
+    return [self initWithLocalStoreNamed:localStore
+                             objectModel:nil];
 }
 
 -(id)initWithLocalStoreNamed:(NSString*)localStore objectModel:(NSManagedObjectModel*)objectModel
@@ -65,7 +66,8 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
         }
         
         // Define the Core Data version migration options
-        NSDictionary *options = @{NSMigratePersistentStoresAutomaticallyOption:@YES, NSInferMappingModelAutomaticallyOption: @YES};
+        NSDictionary *options = @{NSMigratePersistentStoresAutomaticallyOption:@YES,
+                                  NSInferMappingModelAutomaticallyOption: @YES};
         
         // Attempt to load the persistent store
         NSError *error = nil;
@@ -93,6 +95,11 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
         _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
         [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
         [_primaryContext setUndoManager:nil];
+        
+        _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+        [_mainThreadContext setParentContext:self.primaryContext];
+        [_mainThreadContext observeChangesFromParent:YES];
+
     }
     
     return self;
@@ -210,6 +217,11 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                 [_primaryContext setPersistentStoreCoordinator:_persistentStoreCoordinator];
                 [_primaryContext observeiCloudChangesInCoordinator:_persistentStoreCoordinator];
                 [_primaryContext setUndoManager:nil];
+                
+                _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+                [_mainThreadContext setParentContext:self.primaryContext];
+                [_mainThreadContext observeChangesFromParent:YES];
+
             }];
             TMCDLog(@"Primary Context = %@", _primaryContext);
             
@@ -235,14 +247,7 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 {
     if(!self.primaryContext)
         return nil;
-    
-    static dispatch_once_t onceToken = 0;
-    dispatch_once(&onceToken, ^{
-        _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-        [_mainThreadContext setParentContext:self.primaryContext];
-        [_mainThreadContext observeChangesFromParent:YES];
-    });
-    
+
     return _mainThreadContext;
 }
 
