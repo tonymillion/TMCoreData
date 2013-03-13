@@ -17,4 +17,12 @@
                                                              delegate:(id<NSFetchedResultsControllerDelegate>)delegate
                                                             inContext:(NSManagedObjectContext *)context;
 
++(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
+                                                                limit:(NSUInteger)limit
+                                                             sortedBy:(NSString *)sortTerm
+                                                            ascending:(BOOL)ascending
+                                                              groupBy:(NSString *)groupingKeyPath
+                                                             delegate:(id<NSFetchedResultsControllerDelegate>)delegate
+                                                            inContext:(NSManagedObjectContext *)context;
+
 @end

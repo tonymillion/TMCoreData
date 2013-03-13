@@ -99,7 +99,6 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
         _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
         [_mainThreadContext setParentContext:self.primaryContext];
         [_mainThreadContext observeChangesFromParent:YES];
-
     }
     
     return self;
@@ -221,7 +220,6 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                 _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
                 [_mainThreadContext setParentContext:self.primaryContext];
                 [_mainThreadContext observeChangesFromParent:YES];
-
             }];
             TMCDLog(@"Primary Context = %@", _primaryContext);
             
@@ -245,9 +243,6 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 -(NSManagedObjectContext*)mainThreadContext
 {
-    if(!self.primaryContext)
-        return nil;
-
     return _mainThreadContext;
 }
 
@@ -276,6 +271,29 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
     return [[self applicationLibraryDirectory] URLByAppendingPathComponent:self.dataStoreName];
 }
 
+#pragma mark - main thread operation and save
+
+-(void)saveOnMainThreadWithBlock:(void(^)(NSManagedObjectContext *localContext))block
+{
+    [self saveOnMainThreadWithBlock:block
+                         completion:nil];
+}
+
+-(void)saveOnMainThreadWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion
+{
+    [_mainThreadContext performBlock:^{
+        
+        block(_mainThreadContext);
+        
+        [_mainThreadContext recursiveSave];
+        
+        if(completion)
+        {
+            dispatch_async(dispatch_get_main_queue(), completion);
+        }
+    }];
+}
+
 
 #pragma mark - background operation and save
 
@@ -287,13 +305,12 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 -(void)saveInBackgroundWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion
 {
-    NSManagedObjectContext *scratchContext  = [self scratchContext];
-    
-    [scratchContext performBlock:^{
+    NSManagedObjectContext       *backgroundSaveContext = [self scratchContext];
+    [backgroundSaveContext performBlock:^{
         
-        block(scratchContext);
+        block(backgroundSaveContext);
         
-        [scratchContext recursiveSave];
+        [backgroundSaveContext recursiveSave];
         
         if(completion)
         {

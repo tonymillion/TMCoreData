@@ -53,15 +53,16 @@
     return NO;
 }
 
--(NSString *)lookupKeyForAttribute:(NSAttributeDescription *)attributeInfo;
+-(NSString *)lookupKeyForAttribute:(NSAttributeDescription *)attributeInfo
 {
-    NSString *attributeName = [attributeInfo name];
-    NSString *lookupKey     = [[attributeInfo userInfo] valueForKey:@"keyPath"] ?: attributeName;
+    //NSString *attributeName = [attributeInfo name];
+    //NSString *lookupKey     =  [[attributeInfo userInfo] valueForKey:@"keyPath"] ?: attributeName;
     
-    return lookupKey;
+    return [[attributeInfo userInfo] valueForKey:@"keyPath"];
 }
 
--(void)safeImportValuesFromDictionary:(NSDictionary*)dict
+-(void)safeImportValuesFromDictionary:(NSDictionary*)dict inContext:(NSManagedObjectContext*)context
+
 {
     //NSArray      *dictKeys      = [dict allKeys];
     NSDictionary *attributes    = [[self entity] attributesByName];
@@ -71,6 +72,7 @@
         NSAttributeDescription * desc   = [attributes objectForKey:attributeName];
         NSString *entityKey             = [desc name];
         
+        NSString *attributeName         = [desc name];
         NSString *dictKeyPath           = [self lookupKeyForAttribute:desc];
         
         /*TODO:
@@ -79,10 +81,19 @@
          in which to store it.
          
          */
-        id value = [dict valueForKey:dictKeyPath];
+        id value = nil;
+        if(dictKeyPath)
+        {
+            value = [dict valueForKeyPath:dictKeyPath];
+        }
+        else
+        {
+            value = [dict valueForKey:attributeName];
+        }
+        
         if(!value)
         {
-            //TMCDLog(@"dict does not contain key %@", dictKeyPath);
+            //TMCDLog(@"dict does not contain key %@", dictKeyPath)            
             continue;
         }
         
@@ -90,7 +101,7 @@
         if([self importValue:value
                       forKey:entityKey])
         {
-            TMCDLog(@"HANDLED USING CUSTOM IMPORTER");
+            //TMCDLog(@"HANDLED USING CUSTOM IMPORTER");
         }
         else
         {
@@ -120,19 +131,19 @@
             }
             else if(attributeType == NSObjectIDAttributeType)
             {
-                TMCDLog(@"attributeType == NSObjectIDAttributeType for attr: %@", entityKey);
+                //TMCDLog(@"attributeType == NSObjectIDAttributeType for attr: %@", entityKey);
             }
             else if(attributeType == NSBinaryDataAttributeType)
             {
-                TMCDLog(@"attributeType == NSBinaryDataAttributeTypefor attr: %@", entityKey);
+                //TMCDLog(@"attributeType == NSBinaryDataAttributeTypefor attr: %@", entityKey);
             }
             else if(attributeType == NSTransformableAttributeType)
             {
-                TMCDLog(@"attributeType == NSTransformableAttributeType attr: %@", entityKey);
+                //TMCDLog(@"attributeType == NSTransformableAttributeType attr: %@", entityKey);
             }
             else if([value isKindOfClass:[NSNull class]])
             {
-                TMCDLog(@"value was a NSNull - replacing!!!!!!!!!!!!");
+                //TMCDLog(@"value was a NSNull - replacing!!!!!!!!!!!!");
                 value = nil;
             }
             
@@ -152,10 +163,13 @@
     for(NSString* relationship in relationships)
     {
         NSRelationshipDescription* description = [relationships objectForKey:relationship];
+
         id value = [dict objectForKey:relationship];
         if(!value)
+        {
             continue;
-                
+        }
+
         if([self importValue:value
                       forKey:relationship])
         {
@@ -164,18 +178,24 @@
         {
             NSEntityDescription* destination = [description destinationEntity];
             Class class = NSClassFromString([destination managedObjectClassName]);
-            
+
             id objects = [class objectWithObject:value
-                                       inContext:self.managedObjectContext];
+                                       inContext:context];
             
             if([objects isKindOfClass:[NSArray class]])
             {
                 objects = [NSSet setWithArray:objects];
             }
             
+            if(objects == nil)
+            {
+                continue;
+            }
+            
             [self setValue:objects
                     forKey:relationship];
         }
+        
     }
 }
 
@@ -212,7 +232,6 @@
                 
                 if(managedObject)
                 {
-                    TMCDLog(@"Existing Object Found by primaryKey");
                     exisingObject = managedObject;
                 }
             }
@@ -226,7 +245,8 @@
     }
     
     // and then import the data into the object!
-    [exisingObject safeImportValuesFromDictionary:dict];
+    [exisingObject safeImportValuesFromDictionary:dict
+                                        inContext:context];
     
     return exisingObject;
 }
@@ -269,7 +289,6 @@
                 
                 if(managedObject)
                 {
-                    TMCDLog(@"Existing Object Found by primaryKey");
                     return managedObject;
                 }
             }
@@ -279,19 +298,13 @@
     
     if([arrayOrDictionary isKindOfClass:[NSDictionary class]])
     {
-        return [self importFromDictionary:arrayOrDictionary
-                                inContext:context];
+        return [[self class] importFromDictionary:arrayOrDictionary
+                                        inContext:context];
     }
     
     if([arrayOrDictionary isKindOfClass:[NSArray class]])
     {
-        NSMutableArray* array = [NSMutableArray array];
-        for(id object in arrayOrDictionary)
-        {
-            [array addObject:[self importFromDictionary:object
-                                              inContext:context]];
-        }
-        return array;
+        return [[self class] importFromArray:arrayOrDictionary inContext:context];
     }
     
     NSAssert(0, @"Something went wrong! JSON should only be a dictionary or array");

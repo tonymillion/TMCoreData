@@ -10,7 +10,7 @@
 
 @interface NSManagedObject (TMCDImporting)
 
--(void)safeImportValuesFromDictionary:(NSDictionary*)dict;
+-(void)safeImportValuesFromDictionary:(NSDictionary*)dict  inContext:(NSManagedObjectContext*)context;
 
 +(id)importFromDictionary:(NSDictionary*)dict inContext:(NSManagedObjectContext*)context;
 +(NSArray*)importFromArray:(NSArray*)dictArray inContext:(NSManagedObjectContext*)context;

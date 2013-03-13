@@ -34,6 +34,9 @@ extern NSString *const kTMCoreDataiCloudIsAvailableNotification;
 
 -(NSManagedObjectContext*)scratchContext;
 
+-(void)saveOnMainThreadWithBlock:(void(^)(NSManagedObjectContext *localContext))block;
+-(void)saveOnMainThreadWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion;
+
 -(void)saveInBackgroundWithBlock:(void(^)(NSManagedObjectContext *localContext))block;
 -(void)saveInBackgroundWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion;
 
