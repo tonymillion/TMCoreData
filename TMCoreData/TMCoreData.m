@@ -81,7 +81,7 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                                                               error:&error])
         {
             TMCDLog(@"Fatal error while creating persistent store: %@", error);
-            
+            /*
             if ([error.domain isEqualToString:NSCocoaErrorDomain] && [error code] == NSMigrationMissingSourceModelError)
             {
                 // Could not open the database, so... kill it!
@@ -90,6 +90,8 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                 
                 goto tryagain;
             }
+             */
+            abort();
         }
         
         _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
@@ -404,95 +406,3 @@ readdagain:
 
 @end
 
-
-
-/*
- 
- NSString *contentNameKey = [[[NSBundle mainBundle] infoDictionary] objectForKey:(id)kCFBundleIdentifierKey];
- 
- self.dataStoreName = localStore;
- 
- 
- 
- _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:_objectModel];
- 
- dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
- NSFileManager *fileManager = [[NSFileManager alloc] init];
- NSURL *ubiquityContainer = [fileManager URLForUbiquityContainerIdentifier:nil];
- TMCDLog(@"ubiquityContainer = %@", ubiquityContainer);
- 
- // Migrate datamodel
- NSDictionary *options = nil;
- 
- 
- NSString* coreDataCloudContent = [[ubiquityContainer path] stringByAppendingPathComponent:@"data"];
- TMCDLog(@"coreDataCloudContent: %@", coreDataCloudContent);
- 
- if(coreDataCloudContent)
- {
- // iCloud is available
- NSURL * cloudURL = [NSURL fileURLWithPath:coreDataCloudContent];
- TMCDLog(@"cloudURL: %@", coreDataCloudContent);
- 
- 
- options = [NSDictionary dictionaryWithObjectsAndKeys:
- [NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption,
- [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption,
- contentNameKey, NSPersistentStoreUbiquitousContentNameKey,
- cloudURL, NSPersistentStoreUbiquitousContentURLKey,
- nil];
- }
- else
- {
- // iCloud is not available
- TMCDLog(@"iCloud is not available");
- 
- options = [NSDictionary dictionaryWithObjectsAndKeys:
- [NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption,
- [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption,
- nil];
- }
- 
- TMCDLog(@"addPersistentStoreWithType: %@", options);
- NSError *error = nil;
- [_persistentStoreCoordinator lock];
- 
- icloudtryagain:
- if (![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
- configuration:nil
- URL:[self persistentStoreURL]
- options:options
- error:&error])
- {
- TMCDLog(@"addPersistentStoreWithType error %@, %@", error, [error userInfo]);
- 
- if ([error.domain isEqualToString:NSCocoaErrorDomain] && [error code] == NSMigrationMissingSourceModelError)
- {
- // Could not open the database, so... kill it!
- TMCDLog(@"DELETING iCloud persistent store and trying again");
- 
- [[NSFileManager defaultManager] removeItemAtURL:[self persistentStoreURL]
- error:nil];
- 
- goto icloudtryagain;
- }
- 
- }
- [_persistentStoreCoordinator unlock];
- 
- dispatch_async(dispatch_get_main_queue(), ^{
- TMCDLog(@"asynchronously added persistent store!");
- [[NSNotificationCenter defaultCenter] postNotificationName:@"RefetchAllDatabaseData"
- object:self
- userInfo:nil];
- });
- });
- 
- TMCDLog(@"Creating Primary Context");
- _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
- [_primaryContext performBlockAndWait:^{
- [_primaryContext setPersistentStoreCoordinator:_persistentStoreCoordinator];
- [_primaryContext observeiCloudChangesInCoordinator:_persistentStoreCoordinator];
- [_primaryContext setUndoManager:nil];
- }];
- */

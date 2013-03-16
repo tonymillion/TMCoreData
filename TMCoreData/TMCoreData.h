@@ -16,6 +16,8 @@
 #import "NSManagedObject+TMCDFinding.h"
 #import "NSManagedObject+TMCDFetchedResults.h"
 
+#import "NSManagedObject+TMCDDeleting.h"
+
 #import "NSManagedObject+TMCDExporting.h"
 #import "NSManagedObject+TMCDImporting.h"
 
