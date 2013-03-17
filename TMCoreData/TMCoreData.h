@@ -29,10 +29,21 @@ extern NSString *const kTMCoreDataiCloudIsAvailableNotification;
 @property(readonly, nonatomic) NSManagedObjectContext       *primaryContext;
 @property(readonly, nonatomic) NSManagedObjectContext       *mainThreadContext;
 
++(NSURL *)persistentStoreURLForStoreNamed:(NSString *)name;
+
 -(id)initWithLocalStoreNamed:(NSString*)name;
 -(id)initWithLocalStoreNamed:(NSString*)localStore objectModel:(NSManagedObjectModel*)objectModel;
+-(id)initWithLocalStoreURL:(NSURL*)localStoreURL objectModel:(NSManagedObjectModel*)objectModel;
 
--(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID localStoreNamed:(NSString *)localStore objectModel:(NSManagedObjectModel*)objectModel icloudActiveBlock:(void(^)(void))iCloudActiveBlock;
+-(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID
+             localStoreNamed:(NSString *)localStore
+                 objectModel:(NSManagedObjectModel*)objectModel
+           icloudActiveBlock:(void(^)(void))iCloudActiveBlock;
+
+-(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID
+               localStoreURL:(NSURL *)localStoreURL
+                 objectModel:(NSManagedObjectModel*)objectModel
+           icloudActiveBlock:(void(^)(void))iCloudActiveBlock;
 
 -(NSManagedObjectContext*)scratchContext;
 

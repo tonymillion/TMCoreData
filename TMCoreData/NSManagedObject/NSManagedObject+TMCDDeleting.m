@@ -7,6 +7,7 @@
 //
 
 #import "NSManagedObject+TMCDDeleting.h"
+#import "NSManagedObject+TMCDFetching.h"
 
 @implementation NSManagedObject (TMCDDeleting)
 
