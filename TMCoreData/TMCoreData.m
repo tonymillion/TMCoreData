@@ -23,7 +23,7 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 @interface TMCoreData ()
 
-@property(copy) NSString    *dataStoreName;
+@property(strong) NSURL     *persistentStoreURL;
 @property(strong, nonatomic) NSManagedObjectModel          *objectModel;
 @property(strong, nonatomic) NSPersistentStoreCoordinator  *persistentStoreCoordinator;
 
@@ -51,10 +51,16 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 -(id)initWithLocalStoreNamed:(NSString*)localStore objectModel:(NSManagedObjectModel*)objectModel
 {
+  return [self initWithLocalStoreURL:[self.class persistentStoreURLForStoreNamed:localStore]
+                         objectModel:objectModel];
+}
+
+-(id)initWithLocalStoreURL:(NSURL*)localStoreURL objectModel:(NSManagedObjectModel*)objectModel
+{
     self = [super init];
     if(self)
     {
-        self.dataStoreName = localStore;
+        _persistentStoreURL = localStoreURL;
         
         if(objectModel)
         {
@@ -106,12 +112,26 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
     return self;
 }
 
--(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID localStoreNamed:(NSString *)localStore objectModel:(NSManagedObjectModel*)objectModel icloudActiveBlock:(void(^)(void))iCloudActiveBlock
+-(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID
+             localStoreNamed:(NSString *)localStore
+                 objectModel:(NSManagedObjectModel*)objectModel
+           icloudActiveBlock:(void(^)(void))iCloudActiveBlock
+{
+  return [self initWithiCloudContainer:iCloudEnabledAppID
+                         localStoreURL:[self.class persistentStoreURLForStoreNamed:localStore]
+                           objectModel:objectModel
+                     icloudActiveBlock:iCloudActiveBlock];
+}
+
+-(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID
+               localStoreURL:(NSURL *)localStoreURL
+                 objectModel:(NSManagedObjectModel*)objectModel
+           icloudActiveBlock:(void(^)(void))iCloudActiveBlock
 {
     self = [super init];
     if(self)
     {
-        self.dataStoreName = localStore;
+        _persistentStoreURL = localStoreURL;
         
         if(objectModel)
         {
@@ -263,14 +283,14 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 #pragma mark - Helper stuff
 // Returns the URL to the application's Documents directory.
--(NSURL *)applicationLibraryDirectory
++(NSURL *)applicationLibraryDirectory
 {
     return [[[NSFileManager defaultManager] URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
--(NSURL*)persistentStoreURL
++(NSURL *)persistentStoreURLForStoreNamed:(NSString *)name;
 {
-    return [[self applicationLibraryDirectory] URLByAppendingPathComponent:self.dataStoreName];
+    return [[self applicationLibraryDirectory] URLByAppendingPathComponent:name];
 }
 
 #pragma mark - main thread operation and save
