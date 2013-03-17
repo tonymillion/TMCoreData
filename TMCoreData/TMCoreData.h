@@ -29,6 +29,8 @@ extern NSString *const kTMCoreDataiCloudIsAvailableNotification;
 @property(readonly, nonatomic) NSManagedObjectContext       *primaryContext;
 @property(readonly, nonatomic) NSManagedObjectContext       *mainThreadContext;
 
++(NSURL *)persistentStoreURLForStoreNamed:(NSString *)name;
+
 -(id)initWithLocalStoreNamed:(NSString*)name;
 -(id)initWithLocalStoreNamed:(NSString*)localStore objectModel:(NSManagedObjectModel*)objectModel;
 

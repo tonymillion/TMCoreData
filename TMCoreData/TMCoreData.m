@@ -263,14 +263,19 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 #pragma mark - Helper stuff
 // Returns the URL to the application's Documents directory.
--(NSURL *)applicationLibraryDirectory
++(NSURL *)applicationLibraryDirectory
 {
     return [[[NSFileManager defaultManager] URLsForDirectory:NSLibraryDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
++(NSURL *)persistentStoreURLForStoreNamed:(NSString *)name;
+{
+    return [[self applicationLibraryDirectory] URLByAppendingPathComponent:name];
+}
+
 -(NSURL*)persistentStoreURL
 {
-    return [[self applicationLibraryDirectory] URLByAppendingPathComponent:self.dataStoreName];
+    return [[self class] persistentStoreURLForStoreNamed:self.dataStoreName];
 }
 
 #pragma mark - main thread operation and save
