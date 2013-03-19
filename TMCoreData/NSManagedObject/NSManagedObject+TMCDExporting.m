@@ -171,6 +171,20 @@
         }
     }
     
+    if([self respondsToSelector:@selector(finalizeExport:)])
+    {
+        NSString *selectorString = @"finalizeExport:";
+        SEL selector = NSSelectorFromString(selectorString);
+        if ([self respondsToSelector:selector])
+        {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            
+            [self performSelector:selector withObject:mutableDict];
+#pragma clang diagnostic pop
+        }
+    }
+    
     return mutableDict;
 }
 
