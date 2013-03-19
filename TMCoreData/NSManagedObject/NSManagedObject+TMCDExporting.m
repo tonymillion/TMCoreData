@@ -77,7 +77,24 @@
     
     [objectSet addObject:self];
     
-    NSArray *keys = [[[self entity] attributesByName] allKeys];
+    NSMutableArray *keys = [[[[self entity] attributesByName] allKeys] mutableCopy];
+    
+    //TODO: get NSEntityDescription & see if key has shouldExport = NO
+    NSDictionary *attributes    = [[self entity] attributesByName];
+    for(NSString * attributeName in attributes)
+    {
+        NSAttributeDescription * attributeDesc  = [attributes objectForKey:attributeName];
+        NSString *attributeName                 = [attributeDesc name];
+        NSString * shouldExport                 = [attributeDesc userInfo][@"shouldExport"];
+        
+        // if we get a shouldExport and its NOT 1-9 Y,y,T,t (more digits are ignored)
+        if(shouldExport && (![shouldExport boolValue]))
+        {
+            [keys removeObject:attributeName];
+        }
+    }
+    
+
     NSDictionary *dict = [self dictionaryWithValuesForKeys:keys];
     dict = [[dict dictionaryByPruningNulls] dictionaryWithDatesEncodedWithFormatter:self.defaultDateExporter];
     
