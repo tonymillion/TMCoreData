@@ -199,6 +199,14 @@
     }
 }
 
+-(void)importFromDictionary:(NSDictionary*)dict
+{
+    //TODO: should we check primary keys or whatever here???
+    [self safeImportValuesFromDictionary:dict
+                               inContext:self.managedObjectContext];
+}
+
+
 +(id)importFromDictionary:(NSDictionary*)dict inContext:(NSManagedObjectContext*)context
 {
     id exisingObject = nil;
