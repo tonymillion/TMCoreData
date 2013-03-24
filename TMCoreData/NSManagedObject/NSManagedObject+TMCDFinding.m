@@ -43,11 +43,14 @@
                            inContext:context];
 }
 
+
 +(NSArray *)findAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context
 {
 	NSFetchRequest *request = [self requestAllSortedBy:sortTerm ascending:ascending inContext:context];
 	return [self executeFetchRequest:request inContext:context];
 }
+
+
 
 +(NSArray *)findAllWithPredicate:(NSPredicate *)searchTerm inContext:(NSManagedObjectContext *)context
 {
@@ -55,11 +58,38 @@
 	return [self executeFetchRequest:request inContext:context];
 }
 
++(NSArray *)findAllWithPredicate:(NSPredicate*)predicate sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context
+{
+    NSFetchRequest *request = [self requestWithPredicate:predicate
+                                                sortedBy:sortTerm
+                                               ascending:ascending
+                                               inContext:context];
+    
+	return [self executeFetchRequest:request
+                           inContext:context];
+}
+
+
 +(NSArray *)findAllWhereProperty:(NSString *)property isEqualTo:(id)value inContext:(NSManagedObjectContext *)context
 {
-    NSFetchRequest *request = [self requestAllWhere:property isEqualTo:value inContext:context];
-	return [self executeFetchRequest:request inContext:context];
+    NSFetchRequest *request = [self requestAllWhere:property
+                                          isEqualTo:value
+                                          inContext:context];
+    
+	return [self executeFetchRequest:request
+                           inContext:context];
 }
+
++(NSArray *)findAllWhereProperty:(NSString *)property isEqualTo:(id)value sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context
+{
+    NSFetchRequest *request = [self requestAllWhere:property
+                                          isEqualTo:value
+                                          inContext:context];
+    
+	return [self executeFetchRequest:request
+                           inContext:context];
+}
+
 
 
 +(id)findFirstWhereProperty:(NSString *)property isEqualTo:(id)value inContext:(NSManagedObjectContext *)context

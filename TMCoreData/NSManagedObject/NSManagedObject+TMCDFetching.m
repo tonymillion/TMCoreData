@@ -108,15 +108,28 @@
 
 +(NSFetchRequest *)requestAllWhere:(NSString *)property isEqualTo:(id)value inContext:(NSManagedObjectContext *)context
 {
-    NSFetchRequest *request = [self createFetchRequestInContext:context];
-    [request setPredicate:[NSPredicate predicateWithFormat:@"%K = %@", property, value]];
-    
-    return request;
+    return [self requestWithPredicate:[NSPredicate predicateWithFormat:@"%K = %@", property, value]
+                             sortedBy:nil
+                            ascending:NO
+                            inContext:context];
 }
+
++(NSFetchRequest *)requestAllWhere:(NSString *)property isEqualTo:(id)value sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context
+{
+    return [self requestWithPredicate:[NSPredicate predicateWithFormat:@"%K = %@", property, value]
+                             sortedBy:sortTerm
+                            ascending:ascending
+                            inContext:context];
+}
+
+
 
 +(NSFetchRequest*)requestAllWithPredicate:(NSPredicate *)predicate inContext:(NSManagedObjectContext *)context
 {
-    return [self requestWithPredicate:predicate sortedBy:nil ascending:NO inContext:context];
+    return [self requestWithPredicate:predicate
+                             sortedBy:nil
+                            ascending:NO
+                            inContext:context];
 }
 
 

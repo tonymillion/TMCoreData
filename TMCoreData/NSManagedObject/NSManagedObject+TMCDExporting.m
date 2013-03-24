@@ -149,9 +149,9 @@
                 else
                 {
                     // its 1:1
-                    TMCDLog(@"1:1 relationship found!: %@", description);
+                    //TMCDLog(@"1:1 relationship found!: %@", description);
                     NSEntityDescription* destination = [description destinationEntity];
-                    TMCDLog(@"destination: %@", destination);
+                    //TMCDLog(@"destination: %@", destination);
                     
     //                Class class = NSClassFromString([destination managedObjectClassName]);
                     

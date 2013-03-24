@@ -18,7 +18,10 @@
 +(NSArray *)findAllSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context;
 
 +(NSArray *)findAllWithPredicate:(NSPredicate *)searchTerm inContext:(NSManagedObjectContext *)context;
++(NSArray *)findAllWithPredicate:(NSPredicate*)predicate sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context;
+
 +(NSArray *)findAllWhereProperty:(NSString *)property isEqualTo:(id)value inContext:(NSManagedObjectContext *)context;
++(NSArray *)findAllWhereProperty:(NSString *)property isEqualTo:(id)value sortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context;
 
 +(id)findFirstSortedBy:(NSString *)sortTerm ascending:(BOOL)ascending inContext:(NSManagedObjectContext *)context;
 +(id)findFirstWhereProperty:(NSString *)property isEqualTo:(id)value inContext:(NSManagedObjectContext *)context;
