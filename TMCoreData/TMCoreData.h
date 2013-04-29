@@ -53,6 +53,11 @@ extern NSString *const kTMCoreDataiCloudIsAvailableNotification;
 -(void)saveInBackgroundWithBlock:(void(^)(NSManagedObjectContext *localContext))block;
 -(void)saveInBackgroundWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion;
 
+
+-(void)saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block;
+-(void)saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion;
+
+
 -(void)resetPersistentStore;
 
 @end

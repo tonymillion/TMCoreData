@@ -46,7 +46,7 @@
 
 -(id)exportRelationshipWithName:(NSString*)name
 {
-    NSString *selectorString = [NSString stringWithFormat:@"export%@", [name capitalizedFirstLetterString]];
+    NSString *selectorString = [NSString stringWithFormat:@"export%@", [name tmcd_capitalizedFirstLetterString]];
     SEL selector = NSSelectorFromString(selectorString);
     if ([self respondsToSelector:selector])
     {
@@ -84,13 +84,26 @@
     for(NSString * attributeName in attributes)
     {
         NSAttributeDescription * attributeDesc  = [attributes objectForKey:attributeName];
-        NSString *attributeName                 = [attributeDesc name];
-        NSString * shouldExport                 = [attributeDesc userInfo][@"shouldExport"];
+        NSString *attributeDescName             = [attributeDesc name];
+
+        
+        BOOL reallyShouldExport = YES;
+        if([self respondsToSelector:@selector(shouldExport:)])
+        {
+            reallyShouldExport = (BOOL)[self performSelector:@selector(shouldExport:)
+                                                  withObject:attributeName];
+        }
+        else
+        {
+            NSString * shouldExport                 = [attributeDesc userInfo][@"shouldExport"];
+            if(shouldExport && (![shouldExport boolValue]))
+                reallyShouldExport = NO;
+        }
         
         // if we get a shouldExport and its NOT 1-9 Y,y,T,t (more digits are ignored)
-        if(shouldExport && (![shouldExport boolValue]))
+        if(!reallyShouldExport)
         {
-            [keys removeObject:attributeName];
+            [keys removeObject:attributeDescName];
         }
     }
     
@@ -150,10 +163,10 @@
                 {
                     // its 1:1
                     //TMCDLog(@"1:1 relationship found!: %@", description);
-                    NSEntityDescription* destination = [description destinationEntity];
+                    //NSEntityDescription* destination = [description destinationEntity];
                     //TMCDLog(@"destination: %@", destination);
                     
-    //                Class class = NSClassFromString([destination managedObjectClassName]);
+                    //Class class = NSClassFromString([destination managedObjectClassName]);
                     
                     id relatedObject = [self valueForKey:relationship];
                     

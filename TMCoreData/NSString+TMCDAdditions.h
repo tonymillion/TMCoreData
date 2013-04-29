@@ -10,6 +10,6 @@
 
 @interface NSString (TMCDAdditions)
 
--(NSString*)capitalizedFirstLetterString;
+-(NSString*)tmcd_capitalizedFirstLetterString;
 
 @end

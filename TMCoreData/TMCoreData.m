@@ -51,8 +51,8 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 -(id)initWithLocalStoreNamed:(NSString*)localStore objectModel:(NSManagedObjectModel*)objectModel
 {
-  return [self initWithLocalStoreURL:[self.class persistentStoreURLForStoreNamed:localStore]
-                         objectModel:objectModel];
+    return [self initWithLocalStoreURL:[self.class persistentStoreURLForStoreNamed:localStore]
+                           objectModel:objectModel];
 }
 
 -(id)initWithLocalStoreURL:(NSURL*)localStoreURL objectModel:(NSManagedObjectModel*)objectModel
@@ -87,7 +87,7 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                                                               error:&error])
         {
             TMCDLog(@"Fatal error while creating persistent store: %@", error);
-            /*
+            
             if ([error.domain isEqualToString:NSCocoaErrorDomain] && [error code] == NSMigrationMissingSourceModelError)
             {
                 // Could not open the database, so... kill it!
@@ -96,17 +96,21 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                 
                 goto tryagain;
             }
-             */
-            abort();
+            
+            //abort();
         }
         
-        _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
-        [_primaryContext setUndoManager:nil];
+        /*
+         _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+         [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
+         [_primaryContext setUndoManager:nil];
+         */
         
         _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-        [_mainThreadContext setParentContext:self.primaryContext];
-        [_mainThreadContext observeChangesFromParent:YES];
+        //[_mainThreadContext setParentContext:self.primaryContext];
+        //[_mainThreadContext observeChangesFromParent:YES];
+        _primaryContext = _mainThreadContext;
+        [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
     }
     
     return self;
@@ -117,10 +121,10 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                  objectModel:(NSManagedObjectModel*)objectModel
            icloudActiveBlock:(void(^)(void))iCloudActiveBlock
 {
-  return [self initWithiCloudContainer:iCloudEnabledAppID
-                         localStoreURL:[self.class persistentStoreURLForStoreNamed:localStore]
-                           objectModel:objectModel
-                     icloudActiveBlock:iCloudActiveBlock];
+    return [self initWithiCloudContainer:iCloudEnabledAppID
+                           localStoreURL:[self.class persistentStoreURLForStoreNamed:localStore]
+                             objectModel:objectModel
+                       icloudActiveBlock:iCloudActiveBlock];
 }
 
 -(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID
@@ -228,7 +232,7 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                     [[NSNotificationCenter defaultCenter] postNotificationName:kTMCoreDataiCloudIsAvailableNotification
                                                                         object:self];
                 });
-
+                
             }
             
             
@@ -329,6 +333,30 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 {
     NSManagedObjectContext       *backgroundSaveContext = [self scratchContext];
     [backgroundSaveContext performBlock:^{
+        
+        block(backgroundSaveContext);
+        
+        [backgroundSaveContext recursiveSave];
+        
+        if(completion)
+        {
+            dispatch_async(dispatch_get_main_queue(), completion);
+        }
+    }];
+}
+
+#pragma mark - blocking operation and save
+
+-(void)saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block
+{
+    [self saveWithBlock:block
+             completion:nil];
+}
+
+-(void)saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion
+{
+    NSManagedObjectContext       *backgroundSaveContext = [self scratchContext];
+    [backgroundSaveContext performBlockAndWait:^{
         
         block(backgroundSaveContext);
         

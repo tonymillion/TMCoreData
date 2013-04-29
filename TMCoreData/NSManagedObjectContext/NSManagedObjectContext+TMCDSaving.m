@@ -101,12 +101,6 @@
         TMCDLog(@"Merging changes From iCloud");
         
         [self mergeChangesFromContextDidSaveNotification:notification];
-        
-        /*
-         [[NSNotificationCenter defaultCenter] postNotificationName:kMagicalRecordDidMergeChangesFromiCloudNotification
-         object:self
-         userInfo:[notification userInfo]];
-         */
     }];
 }
 

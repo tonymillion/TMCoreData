@@ -36,7 +36,7 @@
 
 -(BOOL)importValue:(id)value forKey:(NSString *)key
 {
-    NSString *selectorString = [NSString stringWithFormat:@"import%@:", [key capitalizedFirstLetterString]];
+    NSString *selectorString = [NSString stringWithFormat:@"import%@:", [key tmcd_capitalizedFirstLetterString]];
     SEL selector = NSSelectorFromString(selectorString);
     if ([self respondsToSelector:selector])
     {
@@ -122,12 +122,24 @@
             {
                 value = [NSNumber numberWithDouble:[value doubleValue]];
             }
-            else if ((attributeType == NSDateAttributeType) && ([value isKindOfClass:[NSString class]]) )
+            else if (attributeType == NSDateAttributeType )
             {
-                NSDateFormatter * df = [self defaultDateFormatter];
-                
-                NSDate * tempDate = [df dateFromString:value];
-                value = tempDate;
+                TMCDLog(@"DATE TYPE DETECTED");
+                if([value isKindOfClass:[NSNumber class]])
+                {
+                    value = [NSDate dateWithTimeIntervalSince1970:[value doubleValue]];
+                }
+                else if([value isKindOfClass:[NSString class]])
+                {
+                    NSDateFormatter * df = [self defaultDateFormatter];
+                    
+                    NSDate * tempDate = [df dateFromString:value];
+                    value = tempDate;
+                }
+                else
+                {
+                    TMCDLog(@"UNKNOWN VALUE TYPE: %@", [value class]);
+                }
             }
             else if(attributeType == NSObjectIDAttributeType)
             {

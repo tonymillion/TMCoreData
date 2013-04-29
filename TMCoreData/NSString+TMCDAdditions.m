@@ -10,7 +10,7 @@
 
 @implementation NSString (TMCDAdditions)
 
--(NSString*)capitalizedFirstLetterString
+-(NSString*)tmcd_capitalizedFirstLetterString
 {
     return [[self lowercaseString] stringByReplacingCharactersInRange:NSMakeRange(0,1)
                                                            withString:[[self substringToIndex:1] uppercaseString]];

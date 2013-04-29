@@ -46,6 +46,40 @@
 }
 
 +(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
+                                                             sortedBy:(NSString *)sortTerm
+                                                            ascending:(BOOL)ascending
+                                                              groupBy:(NSString *)groupingKeyPath
+                                                             delegate:(id<NSFetchedResultsControllerDelegate>)delegate
+                                                            inContext:(NSManagedObjectContext *)context
+                                                            batchSize:(NSUInteger)batchSize
+{
+    NSFetchRequest *request = [self requestWithPredicate:predicate
+                                                sortedBy:sortTerm
+                                               ascending:ascending
+                                               inContext:context];
+    
+    if(!request)
+        return nil;
+    
+    [request setFetchBatchSize:batchSize];
+    
+    NSFetchedResultsController *controller = [[NSFetchedResultsController alloc] initWithFetchRequest:request
+                                                                                 managedObjectContext:context
+                                                                                   sectionNameKeyPath:groupingKeyPath
+                                                                                            cacheName:nil];
+    controller.delegate = delegate;
+    
+	NSError *error = nil;
+	if(![controller performFetch:&error])
+	{
+        TMCDLog(@"performFetch ERROR: %@", error);
+	}
+    
+    return controller;
+}
+
+
++(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                                 limit:(NSUInteger)limit
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
