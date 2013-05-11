@@ -76,6 +76,16 @@
     }
     
     [objectSet addObject:self];
+
+    if([self respondsToSelector:@selector(objectAsDictionary)])
+    {
+        NSDictionary * dict = [self performSelector:@selector(objectAsDictionary)];
+        if(dict)
+        {
+            return dict;
+        }
+    }
+    
     
     NSMutableArray *keys = [[[[self entity] attributesByName] allKeys] mutableCopy];
     
