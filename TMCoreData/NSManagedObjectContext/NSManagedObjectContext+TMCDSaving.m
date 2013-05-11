@@ -20,10 +20,7 @@
     [self performBlockAndWait:^{
         NSError* error = nil;
         
-        if (![self hasChanges])
-            return;
-        
-        if (![self save:&error])
+        if([self hasChanges] && ![self save:&error])
         {
             TMCDLog(@"save ERROR: %@", error);
             result = NO;
@@ -36,12 +33,8 @@
 -(void)recursiveSave
 {
     [self performBlockAndWait:^{
- 
-        if (![self hasChanges])
-            return;
-
         NSError * error;
-        if(![self save:&error])
+        if([self hasChanges] && ![self save:&error])
         {
             //ERROR
             TMCDLog(@"recursiveSave ERROR: %@", error);
