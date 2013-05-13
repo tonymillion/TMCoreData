@@ -141,12 +141,30 @@
             {
                 NSRelationshipDescription* description = [relationships objectForKey:relationship];
 
-                // check userinfo to see if we should export this relationship
-                NSString * shouldExport = [description userInfo][@"shouldExport"];
+
+                BOOL reallyShouldExport = YES;
+                if([self respondsToSelector:@selector(shouldExport:)])
+                {
+                    reallyShouldExport = (BOOL)[self performSelector:@selector(shouldExport:)
+                                                          withObject:relationship];
+                }
+                else
+                {
+                    // check userinfo to see if we should export this relationship
+                    NSString * shouldExport = [description userInfo][@"shouldExport"];
+                    if(shouldExport && (![shouldExport boolValue]))
+                        reallyShouldExport = NO;
+                }
                 
                 // if we get a shouldExport and its NOT 1-9 Y,y,T,t (more digits are ignored)
-                if(shouldExport && (![shouldExport boolValue]))
+                if(!reallyShouldExport)
+                {
+                    // if we get a shouldExport and its NOT 1-9 Y,y,T,t (more digits are ignored)
+                    //if(shouldExport && (![shouldExport boolValue]))
+                    //    continue;
                     continue;
+                }
+
                 
                 //TODO: check if this relationship links back to our type of object and if so, skip it!
                 
@@ -154,8 +172,7 @@
                 if(description.isToMany)
                 {
                     // this should output an NSArray
-                    TMCDLog(@"found to many for: %@", relationship);
-                    
+                    //TMCDLog(@"found to many for: %@", relationship);
                     NSSet * allObjects = [self valueForKey:relationship];
                     NSMutableArray * exportedObjects = [NSMutableArray arrayWithCapacity:allObjects.count];
                     
