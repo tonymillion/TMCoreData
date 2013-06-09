@@ -117,9 +117,29 @@
         }
     }
     
+    // see if the class has implemented -(id)exportProperty
+    NSMutableDictionary *mdict = [[self dictionaryWithValuesForKeys:keys] mutableCopy];
+    
+    
+    NSArray * dictkeys = [mdict allKeys];
 
-    NSDictionary *dict = [self dictionaryWithValuesForKeys:keys];
-    dict = [[dict dictionaryByPruningNulls] dictionaryWithDatesEncodedWithFormatter:self.defaultDateExporter];
+    for (NSString * key in dictkeys) {
+        NSString *selectorString = [NSString stringWithFormat:@"export%@", [key tmcd_capitalizedFirstLetterString]];
+        SEL selector = NSSelectorFromString(selectorString);
+        if ([self respondsToSelector:selector])
+        {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            
+            id exported = [self performSelector:selector];
+#pragma clang diagnostic pop
+            
+            mdict[key] = exported;
+        }
+    }
+    
+    
+    NSDictionary * dict = [[mdict dictionaryByPruningNulls] dictionaryWithDatesEncodedWithFormatter:self.defaultDateExporter];
     
     //TODO: export relationahips
     
