@@ -124,7 +124,7 @@
             }
             else if (attributeType == NSDateAttributeType )
             {
-                TMCDLog(@"DATE TYPE DETECTED");
+                //TMCDLog(@"DATE TYPE DETECTED");
                 if([value isKindOfClass:[NSNumber class]])
                 {
                     value = [NSDate dateWithTimeIntervalSince1970:[value doubleValue]];
@@ -196,7 +196,15 @@
             
             if([objects isKindOfClass:[NSArray class]])
             {
-                objects = [NSSet setWithArray:objects];
+
+                if(description.isOrdered)
+                {
+                    objects = [NSOrderedSet orderedSetWithArray:objects];
+                }
+                else
+                {
+                    objects = [NSSet setWithArray:objects];
+                }
             }
             
             if(objects == nil)
