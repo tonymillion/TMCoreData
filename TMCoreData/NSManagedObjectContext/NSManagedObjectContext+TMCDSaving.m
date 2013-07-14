@@ -37,7 +37,16 @@
         if([self hasChanges] && ![self save:&error])
         {
             //ERROR
-            TMCDLog(@"recursiveSave ERROR: %@", error);
+            TMCDLog(@"Failed to save to data store: %@", [error localizedDescription]);
+            NSArray* detailedErrors = [[error userInfo] objectForKey:NSDetailedErrorsKey];
+            if(detailedErrors != nil && [detailedErrors count] > 0) {
+                for(NSError* detailedError in detailedErrors) {
+                    TMCDLog(@"  DetailedError: %@", [detailedError userInfo]);
+                }
+            }
+            else {
+                TMCDLog(@"  %@", [error userInfo]);
+            }
         }
         
         if(self.parentContext)
