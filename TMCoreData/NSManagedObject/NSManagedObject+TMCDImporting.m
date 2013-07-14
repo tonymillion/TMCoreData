@@ -139,6 +139,10 @@
                 else
                 {
                     TMCDLog(@"UNKNOWN VALUE TYPE: %@", [value class]);
+                    if([value isKindOfClass:[NSNull class]])
+                    {
+                        value = nil;
+                    }
                 }
             }
             else if(attributeType == NSObjectIDAttributeType)
@@ -153,7 +157,8 @@
             {
                 //TMCDLog(@"attributeType == NSTransformableAttributeType attr: %@", entityKey);
             }
-            else if([value isKindOfClass:[NSNull class]])
+            
+            if([value isKindOfClass:[NSNull class]])
             {
                 //TMCDLog(@"value was a NSNull - replacing!!!!!!!!!!!!");
                 value = nil;
@@ -163,6 +168,11 @@
             {
                 [self setValue:value
                         forKey:entityKey];
+            }
+            else
+            {
+                //TODO: should we 'unset' it if its now null?
+                [self setNilValueForKey:entityKey];
             }
         }
     }
@@ -215,8 +225,22 @@
             [self setValue:objects
                     forKey:relationship];
         }
-        
     }
+
+    if([self respondsToSelector:@selector(finalizeImport:)])
+    {
+        NSString *selectorString = @"finalizeImport:";
+        SEL selector = NSSelectorFromString(selectorString);
+        if ([self respondsToSelector:selector])
+        {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-performSelector-leaks"
+            
+            [self performSelector:selector withObject:dict];
+#pragma clang diagnostic pop
+        }
+    }
+
 }
 
 -(void)importFromDictionary:(NSDictionary*)dict
