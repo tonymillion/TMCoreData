@@ -199,7 +199,8 @@
                     [allObjects enumerateObjectsUsingBlock:^(id obj, BOOL *stop) {
                         NSManagedObject * manobj = obj;
                         
-                        id subobj = [manobj exportToDictionaryWithSet:objectSet includeRelationships:includeRelationships];
+                        id subobj = [manobj exportToDictionaryWithSet:objectSet
+                                                 includeRelationships:includeRelationships];
                         if(subobj)
                             [exportedObjects addObject:subobj];
                     }];
