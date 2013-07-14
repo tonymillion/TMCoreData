@@ -10,6 +10,7 @@
 
 #import "TMCDLog.h"
 
+#import "NSManagedObjectModel+KCOrderedAccessorFix.h"
 
 #define IOS_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
 #define IOS_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
@@ -70,6 +71,8 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
         {
             _objectModel = [self objectModelFromAppBundle];
         }
+        
+        [_objectModel kc_generateOrderedSetAccessors];
         
         // Define the Core Data version migration options
         NSDictionary *options = @{NSMigratePersistentStoresAutomaticallyOption:@YES,
