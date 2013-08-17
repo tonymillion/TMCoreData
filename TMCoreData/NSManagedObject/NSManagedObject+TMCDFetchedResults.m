@@ -15,11 +15,11 @@
 @implementation NSManagedObject (TMCDFetchedResults)
 
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
                                                               groupBy:(NSString *)groupingKeyPath
-                                                             delegate:(id<NSFetchedResultsControllerDelegate>)delegate
+                                                             delegate:(id<SSFetchedResultsControllerDelegate>)delegate
                                                             inContext:(NSManagedObjectContext *)context
 {
     NSFetchRequest *request = [self requestWithPredicate:predicate
@@ -30,11 +30,11 @@
     if(!request)
         return nil;
     
-    NSFetchedResultsController *controller = [[NSFetchedResultsController alloc] initWithFetchRequest:request
+    SSFetchedResultsController *controller = [[SSFetchedResultsController alloc] initWithFetchRequest:request
                                                                                  managedObjectContext:context
                                                                                    sectionNameKeyPath:groupingKeyPath
                                                                                             cacheName:nil];
-    controller.delegate = delegate;
+    controller.safeDelegate = delegate;
     
 	NSError *error = nil;
 	if(![controller performFetch:&error])
@@ -45,11 +45,11 @@
     return controller;
 }
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
                                                               groupBy:(NSString *)groupingKeyPath
-                                                             delegate:(id<NSFetchedResultsControllerDelegate>)delegate
+                                                             delegate:(id<SSFetchedResultsControllerDelegate>)delegate
                                                             inContext:(NSManagedObjectContext *)context
                                                             batchSize:(NSUInteger)batchSize
 {
@@ -63,11 +63,11 @@
     
     [request setFetchBatchSize:batchSize];
     
-    NSFetchedResultsController *controller = [[NSFetchedResultsController alloc] initWithFetchRequest:request
+    SSFetchedResultsController *controller = [[SSFetchedResultsController alloc] initWithFetchRequest:request
                                                                                  managedObjectContext:context
                                                                                    sectionNameKeyPath:groupingKeyPath
                                                                                             cacheName:nil];
-    controller.delegate = delegate;
+    controller.safeDelegate = delegate;
     
 	NSError *error = nil;
 	if(![controller performFetch:&error])
@@ -79,11 +79,11 @@
 }
 
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
                                                               groupBy:(NSString *)groupingKeyPath
-                                                             delegate:(id<NSFetchedResultsControllerDelegate>)delegate
+                                                             delegate:(id<SSFetchedResultsControllerDelegate>)delegate
                                                             inContext:(NSManagedObjectContext *)context
                                                             batchSize:(NSUInteger)batchSize
                                                             cacheName:(NSString*)cachename
@@ -99,11 +99,11 @@
     
     [request setFetchBatchSize:batchSize];
     
-    NSFetchedResultsController *controller = [[NSFetchedResultsController alloc] initWithFetchRequest:request
+    SSFetchedResultsController *controller = [[SSFetchedResultsController alloc] initWithFetchRequest:request
                                                                                  managedObjectContext:context
                                                                                    sectionNameKeyPath:groupingKeyPath
                                                                                             cacheName:cachename];
-    controller.delegate = delegate;
+    controller.safeDelegate = delegate;
 
 	NSError *error = nil;
 	if(![controller performFetch:&error])
@@ -115,12 +115,12 @@
 }
 
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                                 limit:(NSUInteger)limit
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
                                                               groupBy:(NSString *)groupingKeyPath
-                                                             delegate:(id<NSFetchedResultsControllerDelegate>)delegate
+                                                             delegate:(id<SSFetchedResultsControllerDelegate>)delegate
                                                             inContext:(NSManagedObjectContext *)context
 {
     NSFetchRequest *request = [self requestWithPredicate:predicate
@@ -133,7 +133,7 @@
     
     [request setFetchLimit:limit];
     
-    NSFetchedResultsController *controller = [[NSFetchedResultsController alloc] initWithFetchRequest:request
+    SSFetchedResultsController *controller = [[SSFetchedResultsController alloc] initWithFetchRequest:request
                                                                                  managedObjectContext:context
                                                                                    sectionNameKeyPath:groupingKeyPath
                                                                                             cacheName:nil];

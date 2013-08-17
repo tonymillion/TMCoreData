@@ -19,19 +19,9 @@
 
 //override this in your own class if you have a custom dateformatter requirement
 // or even better override the importYourproperty: method and use your own fancy stuff!
--(NSDateFormatter*)defaultDateFormatter
+-(ISO8601DateFormatter*)defaultDateFormatter
 {
-    static __strong NSDateFormatter * df = nil;
-    
-   	static dispatch_once_t pred = 0;
-    dispatch_once(&pred, ^{
-		df = [[NSDateFormatter alloc] init];
-		[df setDateFormat:@"yyyy-MM-dd'T'HH:mm:ss'Z'"];
-        df.timeZone = [NSTimeZone timeZoneWithAbbreviation:@"UTC"];
-        df.locale = [[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"];
-    });
-    
-	return df;
+    return [[ISO8601DateFormatter alloc] init];
 }
 
 -(BOOL)importValue:(id)value forKey:(NSString *)key
@@ -131,7 +121,8 @@
                 }
                 else if([value isKindOfClass:[NSString class]])
                 {
-                    NSDateFormatter * df = [self defaultDateFormatter];
+                    //NSDateFormatter * df = [self defaultDateFormatter];
+                    ISO8601DateFormatter * df = [[ISO8601DateFormatter alloc] init];
                     
                     NSDate * tempDate = [df dateFromString:value];
                     value = tempDate;
