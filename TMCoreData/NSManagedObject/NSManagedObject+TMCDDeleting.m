@@ -16,6 +16,7 @@
     NSFetchRequest * freq = [self createFetchRequestInContext:context];
     freq.includesPropertyValues = NO;
     freq.includesSubentities    = NO;
+    freq.returnsObjectsAsFaults = YES;
 
     NSError * error = nil;
     NSArray * objects = [context executeFetchRequest:freq
