@@ -11,14 +11,14 @@
 
 @interface NSManagedObject (TMCDFetchedResults)
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
                                                               groupBy:(NSString *)groupingKeyPath
                                                              delegate:(id<NSFetchedResultsControllerDelegate>)delegate
                                                             inContext:(NSManagedObjectContext *)context;
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
                                                               groupBy:(NSString *)groupingKeyPath
@@ -26,7 +26,7 @@
                                                             inContext:(NSManagedObjectContext *)context
                                                             batchSize:(NSUInteger)batchSize;
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
                                                               groupBy:(NSString *)groupingKeyPath
@@ -35,7 +35,7 @@
                                                             batchSize:(NSUInteger)batchSize
                                                             cacheName:(NSString*)cachename;
 
-+(NSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
++(SSFetchedResultsController *) fetchedResultsControllerWithPredicate:(NSPredicate *)predicate
                                                                 limit:(NSUInteger)limit
                                                              sortedBy:(NSString *)sortTerm
                                                             ascending:(BOOL)ascending
