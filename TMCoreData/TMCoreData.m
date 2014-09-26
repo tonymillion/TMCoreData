@@ -114,146 +114,20 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
         //[_mainThreadContext observeChangesFromParent:YES];
         _primaryContext = _mainThreadContext;
         [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
+
+        /*
+        //TODO: create this dynamically
+        _backgroundSaveObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+        [_backgroundSaveObjectContext setPersistentStoreCoordinator:_persistentStoreCoordinator];
+        [_backgroundSaveObjectContext setStalenessInterval:0];
+
+        //TODO: also create this dynamically
+        _mainThreadObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+        [_mainThreadObjectContext setParentContext:_backgroundSaveObjectContext];
+        [_mainThreadObjectContext setStalenessInterval:0];
+         */
     }
     
-    return self;
-}
-
--(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID
-             localStoreNamed:(NSString *)localStore
-                 objectModel:(NSManagedObjectModel*)objectModel
-           icloudActiveBlock:(void(^)(void))iCloudActiveBlock
-{
-    return [self initWithiCloudContainer:iCloudEnabledAppID
-                           localStoreURL:[self.class persistentStoreURLForStoreNamed:localStore]
-                             objectModel:objectModel
-                       icloudActiveBlock:iCloudActiveBlock];
-}
-
--(id)initWithiCloudContainer:(NSString *)iCloudEnabledAppID
-               localStoreURL:(NSURL *)localStoreURL
-                 objectModel:(NSManagedObjectModel*)objectModel
-           icloudActiveBlock:(void(^)(void))iCloudActiveBlock
-{
-    self = [super init];
-    if(self)
-    {
-        _persistentStoreURL = localStoreURL;
-        
-        if(objectModel)
-        {
-            _objectModel = objectModel;
-        }
-        else
-        {
-            _objectModel = [self objectModelFromAppBundle];
-        }
-        
-        _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:_objectModel];
-        
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            
-            NSFileManager *fileManager = [[NSFileManager alloc] init];
-            
-            NSURL *ubiquityContainer = [fileManager URLForUbiquityContainerIdentifier:nil];
-            
-            if(ubiquityContainer)
-            {
-                NSURL *iCloudLogsPath = [NSURL fileURLWithPath:[[ubiquityContainer path] stringByAppendingPathComponent:@"Logs"]];
-                
-                TMCDLog(@"ubiquityContainer = %@", ubiquityContainer);
-                TMCDLog(@"iCloudEnabledAppID = %@",iCloudEnabledAppID);
-                TMCDLog(@"iCloudLogsPath = %@", iCloudLogsPath);
-                
-                NSMutableDictionary *options = [NSMutableDictionary dictionary];
-                [options setObject:[NSNumber numberWithBool:YES] forKey:NSMigratePersistentStoresAutomaticallyOption];
-                [options setObject:[NSNumber numberWithBool:YES] forKey:NSInferMappingModelAutomaticallyOption];
-                [options setObject:iCloudEnabledAppID            forKey:NSPersistentStoreUbiquitousContentNameKey];
-                [options setObject:iCloudLogsPath                forKey:NSPersistentStoreUbiquitousContentURLKey];
-                
-                [_persistentStoreCoordinator lock];
-                NSError * error;
-                if(![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
-                                                              configuration:nil
-                                                                        URL:[self persistentStoreURL]
-                                                                    options:options
-                                                                      error:&error])
-                {
-                    TMCDLog(@"iCloud addPersistentStoreWithType FAILED: %@", error);
-                    abort();
-                }
-                
-                [_persistentStoreCoordinator unlock];
-                
-                if(iCloudActiveBlock)
-                {
-                    // we call this SYNCHRONOUSLY on the main queue, before dispatching the notification
-                    dispatch_sync(dispatch_get_main_queue(), ^{
-                        iCloudActiveBlock();
-                    });
-                }
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kTMCoreDataiCloudIsAvailableNotification
-                                                                        object:self];
-                });
-            }
-            else
-            {
-                TMCDLog(@"iCloud is INACTIVE");
-                
-                if([[self persistentStoreURL] checkResourceIsReachableAndReturnError:nil] == YES) {
-                    
-                    [fileManager removeItemAtURL:[self persistentStoreURL]
-                                           error:nil];
-                    
-                }
-                
-                
-                NSMutableDictionary *options = [NSMutableDictionary dictionary];
-                [options setObject:[NSNumber numberWithBool:YES] forKey:NSMigratePersistentStoresAutomaticallyOption];
-                [options setObject:[NSNumber numberWithBool:YES] forKey:NSInferMappingModelAutomaticallyOption];
-                
-                [_persistentStoreCoordinator lock];
-                
-                [_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
-                                                          configuration:nil
-                                                                    URL:[self persistentStoreURL]
-                                                                options:options
-                                                                  error:nil];
-                
-                [_persistentStoreCoordinator unlock];
-                
-                if(iCloudActiveBlock)
-                {
-                    dispatch_sync(dispatch_get_main_queue(), ^{
-                        iCloudActiveBlock();
-                    });
-                }
-                
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [[NSNotificationCenter defaultCenter] postNotificationName:kTMCoreDataiCloudIsAvailableNotification
-                                                                        object:self];
-                });
-                
-            }
-            
-            
-            TMCDLog(@"Creating Primary Context");
-            _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-            [_primaryContext performBlockAndWait:^{
-                [_primaryContext setPersistentStoreCoordinator:_persistentStoreCoordinator];
-                [_primaryContext observeiCloudChangesInCoordinator:_persistentStoreCoordinator];
-                [_primaryContext setUndoManager:nil];
-                
-                _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-                [_mainThreadContext setParentContext:self.primaryContext];
-                [_mainThreadContext observeChangesFromParent:YES];
-            }];
-            TMCDLog(@"Primary Context = %@", _primaryContext);
-            
-        });
-    }
     return self;
 }
 
