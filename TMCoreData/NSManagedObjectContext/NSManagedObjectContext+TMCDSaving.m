@@ -13,29 +13,20 @@
 
 @implementation NSManagedObjectContext (TMCDSaving)
 
-- (BOOL)save
+
+
+#pragma mark - Saving Helpers
+-(BOOL)save
 {
     __block BOOL result = YES;
-    
+
     [self performBlockAndWait:^{
         NSError* error = nil;
-        
-        if([self hasChanges] && ![self save:&error])
-        {
-            TMCDLog(@"save ERROR: %@", error);
-            result = NO;
-        }
-    }];
-    
-    return result;
-}
 
--(void)recursiveSave
-{
-    [self performBlockAndWait:^{
-        NSError * error;
-        if([self hasChanges] && ![self save:&error])
+        if(![self save:&error])
         {
+
+#ifdef DEBUG
             //ERROR
             TMCDLog(@"Failed to save to data store: %@", [error localizedDescription]);
             NSArray* detailedErrors = [[error userInfo] objectForKey:NSDetailedErrorsKey];
@@ -47,14 +38,69 @@
             else {
                 TMCDLog(@"  %@", [error userInfo]);
             }
+#endif
+
+            result = NO;
         }
-        
-        if(self.parentContext)
+
+    }];
+
+    return result;
+}
+
+-(void)recursiveSave
+{
+    [self performBlockAndWait:^{
+
+        if([self hasChanges])
         {
-            [self.parentContext recursiveSave];
+            if(![self save])
+            {
+                //An error happened :(
+            }
+            else
+            {
+                if(self.parentContext)
+                {
+                    [self.parentContext recursiveSave];
+                }
+            }
         }
     }];
 }
+
+#pragma mark - update helpers
+
+-(void)performBlockAndSave:(void (^)(NSManagedObjectContext *context))block
+{
+    __block UIBackgroundTaskIdentifier taskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        [[UIApplication sharedApplication] endBackgroundTask:taskID];
+    }];
+
+    [self performBlock:^{
+        block(self);
+        [self recursiveSave];
+
+        [[UIApplication sharedApplication] endBackgroundTask:taskID];
+
+    }];
+}
+
+-(void)performBlockAndWaitAndSave:(void (^)(NSManagedObjectContext *context))block
+{
+    __block UIBackgroundTaskIdentifier taskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
+        [[UIApplication sharedApplication] endBackgroundTask:taskID];
+    }];
+
+    [self performBlockAndWait:^{
+        block(self);
+        [self recursiveSave];
+
+        [[UIApplication sharedApplication] endBackgroundTask:taskID];
+    }];
+}
+
+#pragma mark - changes helpers
 
 -(void)observeChangesFromParent:(BOOL)observe
 {
@@ -75,51 +121,25 @@
 - (void)contextDidSave:(NSNotification *)notification
 {
     NSManagedObjectContext * notificationContext = notification.object;
-    
+
     if(notificationContext == self)
     {
         // we dont need to run on ourselves
         return;
     }
-    
+
     // only do this if the notification came from our direct parent please
-    // we need this as if you have more than 1 TMCoreData instance it will
+    // we need this as if you have more than one ADCoreDataStack instance it will
     // seriously mess up trying to import from another store!
     if( notification.object == self.parentContext )
     {
         [self performBlock:^{
+            //CDLog(@"Merging changes from parent: %@", notification);
             [self mergeChangesFromContextDidSaveNotification:notification];
         }];
     }
 }
 
 
-#pragma mark - Context iCloud Merge Helpers
-
--(void)mergeChangesFromiCloud:(NSNotification *)notification
-{
-    [self performBlock:^{
-        
-        TMCDLog(@"Merging changes From iCloud");
-        
-        [self mergeChangesFromContextDidSaveNotification:notification];
-    }];
-}
-
--(void)observeiCloudChangesInCoordinator:(NSPersistentStoreCoordinator *)coordinator
-{
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(mergeChangesFromiCloud:)
-                                                 name:NSPersistentStoreDidImportUbiquitousContentChangesNotification
-                                               object:coordinator];
-    
-}
-
--(void)stopObservingiCloudChangesInCoordinator:(NSPersistentStoreCoordinator *)coordinator
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:self
-                                                    name:NSPersistentStoreDidImportUbiquitousContentChangesNotification
-                                                  object:coordinator];
-}
 
 @end

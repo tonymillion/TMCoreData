@@ -14,7 +14,8 @@
 
 -(void)observeChangesFromParent:(BOOL)observe;
 
--(void)observeiCloudChangesInCoordinator:(NSPersistentStoreCoordinator *)coordinator;
--(void)stopObservingiCloudChangesInCoordinator:(NSPersistentStoreCoordinator *)coordinator;
+-(void)performBlockAndSave:(void (^)(NSManagedObjectContext *context))block;
+-(void)performBlockAndWaitAndSave:(void (^)(NSManagedObjectContext *context))block;
+
 
 @end
