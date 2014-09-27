@@ -73,6 +73,16 @@
 
 -(void)performBlockAndSave:(void (^)(NSManagedObjectContext *context))block
 {
+    [self performBlockAndSave:block completion:nil];
+}
+
+-(void)performBlockAndWaitAndSave:(void (^)(NSManagedObjectContext *context))block
+{
+    [self performBlockAndWaitAndSave:block completion:nil];
+}
+
+-(void)performBlockAndSave:(void (^)(NSManagedObjectContext *context))block completion:(void(^)(void))completion
+{
     __block UIBackgroundTaskIdentifier taskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
         [[UIApplication sharedApplication] endBackgroundTask:taskID];
     }];
@@ -81,12 +91,15 @@
         block(self);
         [self recursiveSave];
 
-        [[UIApplication sharedApplication] endBackgroundTask:taskID];
+        if (completion) {
+            completion();
+        }
 
+        [[UIApplication sharedApplication] endBackgroundTask:taskID];
     }];
 }
 
--(void)performBlockAndWaitAndSave:(void (^)(NSManagedObjectContext *context))block
+-(void)performBlockAndWaitAndSave:(void (^)(NSManagedObjectContext *context))block completion:(void(^)(void))completion
 {
     __block UIBackgroundTaskIdentifier taskID = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^{
         [[UIApplication sharedApplication] endBackgroundTask:taskID];
@@ -96,9 +109,14 @@
         block(self);
         [self recursiveSave];
 
+        if (completion) {
+            completion();
+        }
+
         [[UIApplication sharedApplication] endBackgroundTask:taskID];
     }];
 }
+
 
 #pragma mark - changes helpers
 

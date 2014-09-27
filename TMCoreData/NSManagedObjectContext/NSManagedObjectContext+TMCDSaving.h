@@ -17,5 +17,9 @@
 -(void)performBlockAndSave:(void (^)(NSManagedObjectContext *context))block;
 -(void)performBlockAndWaitAndSave:(void (^)(NSManagedObjectContext *context))block;
 
+-(void)performBlockAndSave:(void (^)(NSManagedObjectContext *context))block completion:(void(^)(void))completion;
+-(void)performBlockAndWaitAndSave:(void (^)(NSManagedObjectContext *context))block completion:(void(^)(void))completion;
+
+
 
 @end

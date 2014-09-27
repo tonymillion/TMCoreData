@@ -102,7 +102,7 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
             
             //abort();
         }
-        
+#if 0
         /*
          _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
          [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
@@ -114,18 +114,20 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
         //[_mainThreadContext observeChangesFromParent:YES];
         _primaryContext = _mainThreadContext;
         [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
+#else
+        TMCDLog(@"Using background save context");
 
-        /*
         //TODO: create this dynamically
-        _backgroundSaveObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        [_backgroundSaveObjectContext setPersistentStoreCoordinator:_persistentStoreCoordinator];
-        [_backgroundSaveObjectContext setStalenessInterval:0];
+        _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+        [_primaryContext setPersistentStoreCoordinator:_persistentStoreCoordinator];
+        [_primaryContext setStalenessInterval:0];
 
         //TODO: also create this dynamically
-        _mainThreadObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-        [_mainThreadObjectContext setParentContext:_backgroundSaveObjectContext];
-        [_mainThreadObjectContext setStalenessInterval:0];
-         */
+        _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+        [_mainThreadContext setParentContext:_primaryContext];
+        [_mainThreadContext setStalenessInterval:0];
+
+#endif
     }
     
     return self;
@@ -173,79 +175,6 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 {
     return [[self applicationLibraryDirectory] URLByAppendingPathComponent:name];
 }
-
-#pragma mark - main thread operation and save
-
--(void)saveOnMainThreadWithBlock:(void(^)(NSManagedObjectContext *localContext))block
-{
-    [self saveOnMainThreadWithBlock:block
-                         completion:nil];
-}
-
--(void)saveOnMainThreadWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion
-{
-    [_mainThreadContext performBlock:^{
-        
-        block(_mainThreadContext);
-        
-        [_mainThreadContext recursiveSave];
-        
-        if(completion)
-        {
-            dispatch_async(dispatch_get_main_queue(), completion);
-        }
-    }];
-}
-
-
-#pragma mark - background operation and save
-
--(void)saveInBackgroundWithBlock:(void(^)(NSManagedObjectContext *localContext))block
-{
-    [self saveInBackgroundWithBlock:block
-                         completion:nil];
-}
-
--(void)saveInBackgroundWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion
-{
-    NSManagedObjectContext       *backgroundSaveContext = [self scratchContext];
-    [backgroundSaveContext performBlock:^{
-        
-        block(backgroundSaveContext);
-        
-        [backgroundSaveContext recursiveSave];
-        
-        if(completion)
-        {
-            dispatch_async(dispatch_get_main_queue(), completion);
-        }
-    }];
-}
-
-#pragma mark - blocking operation and save
-
--(void)saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block
-{
-    [self saveWithBlock:block
-             completion:nil];
-}
-
--(void)saveWithBlock:(void(^)(NSManagedObjectContext *localContext))block completion:(void(^)(void))completion
-{
-    NSManagedObjectContext       *backgroundSaveContext = [self scratchContext];
-    [backgroundSaveContext performBlockAndWait:^{
-        
-        block(backgroundSaveContext);
-        
-        [backgroundSaveContext recursiveSave];
-        
-        if(completion)
-        {
-            dispatch_async(dispatch_get_main_queue(), completion);
-        }
-    }];
-}
-
 
 #pragma mark - persistent store coordinator stuff
 
