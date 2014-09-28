@@ -99,35 +99,7 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
                 
                 goto tryagain;
             }
-            
-            //abort();
         }
-#if 0
-        /*
-         _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-         [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
-         [_primaryContext setUndoManager:nil];
-         */
-        
-        _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-        //[_mainThreadContext setParentContext:self.primaryContext];
-        //[_mainThreadContext observeChangesFromParent:YES];
-        _primaryContext = _mainThreadContext;
-        [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
-#else
-        TMCDLog(@"Using background save context");
-
-        //TODO: create this dynamically
-        _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
-        [_primaryContext setPersistentStoreCoordinator:_persistentStoreCoordinator];
-        [_primaryContext setStalenessInterval:0];
-
-        //TODO: also create this dynamically
-        _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-        [_mainThreadContext setParentContext:_primaryContext];
-        [_mainThreadContext setStalenessInterval:0];
-
-#endif
     }
     
     return self;
@@ -146,8 +118,34 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
 
 #pragma mark - context getting stuff
 
+-(NSManagedObjectContext*)primaryContext
+{
+    if(_primaryContext == nil)
+    {
+        @synchronized(self)
+        {
+            _primaryContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+            [_primaryContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
+            [_primaryContext setStalenessInterval:60];
+        }
+    }
+
+    return _primaryContext;
+}
+
 -(NSManagedObjectContext*)mainThreadContext
 {
+    if(!_mainThreadContext)
+    {
+        @synchronized(self)
+        {
+            _mainThreadContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
+            [_mainThreadContext setParentContext:self.primaryContext];
+            [_mainThreadContext setStalenessInterval:60];
+            //[_mainThreadContext observeChangesFromParent:YES];
+        }
+    }
+
     return _mainThreadContext;
 }
 
@@ -162,7 +160,6 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
     
     return tempContext;
 }
-
 
 #pragma mark - Helper stuff
 // Returns the URL to the application's Documents directory.
@@ -197,64 +194,74 @@ NSString *const kTMCoreDataiCloudIsAvailableNotification = @"kTMCoreDataiCloudIs
         return;
     }
     
-    [_mainThreadContext performBlockAndWait:^{
-        [_mainThreadContext reset];
-    }];
-    
-    [_primaryContext performBlockAndWait:^{
-        [_primaryContext reset];
-    }];
-    
-	for (NSPersistentStore *store in [_persistentStoreCoordinator persistentStores])
-	{
-		if (![_persistentStoreCoordinator removePersistentStore:store
-														  error:&error])
-		{
-			TMCDLog(@"removePersistentStore error %@, %@", error, [error userInfo]);
-		}
-        
-		TMCDLog(@"Deleting: %@", store.URL.absoluteString);
-        
-		if (![[NSFileManager defaultManager] removeItemAtURL:store.URL
-													   error:&error])
-		{
-			TMCDLog(@" %@, %@", error, [error userInfo]);
-		}
-	}
-    
-    // Define the Core Data version migration options
-	NSDictionary *options = @{NSMigratePersistentStoresAutomaticallyOption:@YES, NSInferMappingModelAutomaticallyOption: @YES};
-    
-readdagain:
-	if (![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
-												   configuration:nil
-															 URL:[self persistentStoreURL]
-														 options:options
-														   error:&error])
-	{
-		TMCDLog(@"addPersistentStoreWithType (%@) error %@, %@",[self persistentStoreURL], error, [error userInfo]);
-        
-        NSError * fileError;
-        
-		if(![[NSFileManager defaultManager] removeItemAtURL:[self persistentStoreURL]
-													  error:&fileError])
-		{
-			TMCDLog(@"ERROR DELETING STORE: %@", fileError);
-		}
-        else
+
+    @synchronized(self)
+    {
+        [_mainThreadContext performBlockAndWait:^{
+            [_mainThreadContext reset];
+        }];
+
+        [_primaryContext performBlockAndWait:^{
+            [_primaryContext reset];
+        }];
+
+        // we can't handle scratch contexts in use using this :(
+        // deallocate these please!
+        _mainThreadContext = nil;
+        _primaryContext = nil;
+
+
+        for (NSPersistentStore *store in [_persistentStoreCoordinator persistentStores])
         {
-            goto readdagain;
+            if (![_persistentStoreCoordinator removePersistentStore:store
+                                                              error:&error])
+            {
+                TMCDLog(@"removePersistentStore error %@, %@", error, [error userInfo]);
+            }
+            
+            TMCDLog(@"Deleting: %@", store.URL.absoluteString);
+            
+            if (![[NSFileManager defaultManager] removeItemAtURL:store.URL
+                                                           error:&error])
+            {
+                TMCDLog(@" %@, %@", error, [error userInfo]);
+            }
         }
+        
+        // Define the Core Data version migration options
+        NSDictionary *options = @{NSMigratePersistentStoresAutomaticallyOption:@YES, NSInferMappingModelAutomaticallyOption: @YES};
+        
+    readdagain:
+        if (![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType
+                                                       configuration:nil
+                                                                 URL:[self persistentStoreURL]
+                                                             options:options
+                                                               error:&error])
+        {
+            TMCDLog(@"addPersistentStoreWithType (%@) error %@, %@",[self persistentStoreURL], error, [error userInfo]);
+            
+            NSError * fileError;
+            
+            if(![[NSFileManager defaultManager] removeItemAtURL:[self persistentStoreURL]
+                                                          error:&fileError])
+            {
+                TMCDLog(@"ERROR DELETING STORE: %@", fileError);
+            }
+            else
+            {
+                goto readdagain;
+            }
+        }
+        
+        
+        [_mainThreadContext performBlockAndWait:^{
+            [_mainThreadContext reset];
+        }];
+        
+        [_primaryContext performBlockAndWait:^{
+            [_primaryContext reset];
+        }];
     }
-    
-    
-    [_mainThreadContext performBlockAndWait:^{
-        [_mainThreadContext reset];
-    }];
-    
-    [_primaryContext performBlockAndWait:^{
-        [_primaryContext reset];
-    }];
 }
 
 
