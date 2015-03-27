@@ -85,6 +85,9 @@
         NSArray* sortKeys = [sortTerm componentsSeparatedByString:@","];
         for(NSString* sortKey in sortKeys)
         {
+
+            ascending = ascending;
+
             NSString * theKey = sortKey;
             if ([sortKey hasPrefix:@"+"]) {
                 ascending = YES;
@@ -95,11 +98,7 @@
                 ascending = NO;
                 theKey = [sortKey substringFromIndex:1];
             }
-            else
-            {
-                ascending = NO;
-            }
-            
+
             NSSortDescriptor *sortDescriptor = [[NSSortDescriptor alloc] initWithKey:theKey
                                                                            ascending:ascending];
             [sortDescriptors addObject:sortDescriptor];
